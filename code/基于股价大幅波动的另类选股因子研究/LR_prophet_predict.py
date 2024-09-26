@@ -38,7 +38,7 @@ cutoff = '2023-09-1 00:00:00'
 #bond_codes = ["210203.IB", "190215.IB", "210205.IB", "210210.IB", "220205.IB",
  #             "220210.IB", "220215.IB", "220220.IB", "230205.IB", "210220.IB"]
 src_files = ['diff_gk.xlsx','diff_gz.xlsx','diff_nf.xlsx','diff_jc.xlsx']
-#src_files = ['diff_gz.xlsx']
+#src_files = ['diff_gk.xlsx']
 
 #spread_file = 'E://meridian//债券//信号统计//NSS信号.xlsx'
 #spread_df = pd.read_excel(spread_file, sheet_name='bid-ask-spread')
@@ -88,7 +88,8 @@ def decode(x,i):
         return 'NaN'
 def get_prophet_signal(src_file: str):
     print("starting reading ")
-    request_file = 'D://git//strategy-repos-master//butterfly//nss-data//' + src_file
+    #request_file = 'D://git//strategy-repos-master//butterfly//nss-data//' + src_file
+    request_file = 'C://git//ficc-code//nss-data//' + src_file
     src_df = pd.read_excel(request_file)
     src_df = src_df.drop('Yld', axis=1)
     src_df = src_df.drop('TradeTime', axis=1)
@@ -110,7 +111,7 @@ def get_prophet_signal(src_file: str):
     codes = src_df.Code.unique()
 
     filename= str(uuid.uuid4().hex) + "_prophet_"+ src_file
-    writer = pd.ExcelWriter("D://git//Quantitative-Trading//bond-data//"+filename)
+    writer = pd.ExcelWriter("B://git//Quantitative-Trading//bond-data//"+filename)
     print("codes length ", len(codes))
     for code in codes:
         if(len(code) <= 9 and code.startswith('2')):
@@ -120,18 +121,21 @@ def get_prophet_signal(src_file: str):
             skip_df = newdf.loc[cutoff:]
             if(len(skip_df) <= 2):
                continue
-            #print("code is  ", code)
-           # if code == '220406.IB':
-             #  print("code is 220406.IB ")
+            print("code -》 ", code)
+            if code == '230302.IB':
+                print("code is 230302.IB ")
             newdf = newdf.tail(400)
             if (len(newdf) <= 100):
                 continue
             #
-            data_df=newdf.iloc[:-1, :]
+            data_df = newdf.iloc[:-1, :]
+            #data_df = newdf
             halflife_Zero = get_half_life(data_df["Zero"])
             halflife_NssZero = get_half_life(data_df["NssZero"])
             if(halflife_Zero > 0 and halflife_NssZero > 0 ):
                 window_size = int(np.rint(halflife_Zero + halflife_NssZero)/2)
+                if (len(data_df)/1.1 <= window_size):
+                    continue
                 data_df['dayRet'] = data_df['Zero'].diff()*10000
                 #rolling skew to predict month cum
                 data_df['skew'] = data_df['dayRet'].rolling(window=int(window_size), center=False).skew()
@@ -150,8 +154,8 @@ def get_prophet_signal(src_file: str):
                     if (m + 11 >= monthes.max()):
                         predict(m, monthes.max(), data_df, 40)
                         break
-                    #if code == '220406.IB':
-                    #    print("m is  ", m)
+                    if code == '220406.IB':
+                        print("m is  ", m)
                     train_df, test_df = make_prophet(m, m + 11, m + 11, m + 12, data_df)
 
                     test_df["prophet-signal-decode"] = test_df["prophet-signal"].apply(lambda x: decode(x, 0))
@@ -166,9 +170,11 @@ def get_prophet_signal(src_file: str):
                         test_df.at[-1, 'PnLYield'] = 0
                     test_df.fillna(0, axis=1, inplace=True)
                     if len(result_df) == 0:
-                        result_df = train_df.append(test_df)
+                        #result_df = train_df.append(test_df)
+                        result_df = pd.concat([train_df, test_df], ignore_index=True)
                     else:
-                        result_df = result_df.append(test_df)
+                        #result_df = result_df.append(test_df)
+                        result_df = pd.concat([result_df, test_df], ignore_index=True)
                 if len(result_df) > 0:
                     result_df['signal_check-signal'] = result_df[['signal', 'prophet-signal']].apply(
                         lambda x: "Y" if x['signal'] == x['prophet-signal'] else 'N', axis=1)
