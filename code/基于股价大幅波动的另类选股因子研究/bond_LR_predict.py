@@ -162,8 +162,8 @@ data_df['month_diff'] = data_df["dates_2"].apply(lambda row: get_month_diff(row,
 X, Y = cross_validation(data_df)
 mse(X, Y, data_df)
 '''
-data_file_2="m_delta_210013.IB_df_bond.csv"
-data_file_full_2 = 'B://git//Quantitative-Trading//code//基于股价大幅波动的另类选股因子研究//' + data_file_2
+#data_file_2="m_delta_210013.IB_df_bond.csv"
+#data_file_full_2 = 'B://git//Quantitative-Trading//code//基于股价大幅波动的另类选股因子研究//' + data_file_2
 #data_df_2 = pd.read_csv(data_file_full_2)
 
 def predict(train_start: int, train_end: int, data_df: DataFrame, predict_days: int):

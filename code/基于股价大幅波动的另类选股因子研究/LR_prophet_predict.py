@@ -111,7 +111,8 @@ def get_prophet_signal(src_file: str):
     codes = src_df.Code.unique()
 
     filename= str(uuid.uuid4().hex) + "_prophet_"+ src_file
-    writer = pd.ExcelWriter("B://git//Quantitative-Trading//bond-data//"+filename)
+    #writer = pd.ExcelWriter("B://git//Quantitative-Trading//bond-data//"+filename)
+    writer = pd.ExcelWriter("C://git//logistics-Quantitative-Trading//bond-data//" + filename)
     print("codes length ", len(codes))
     for code in codes:
         if(len(code) <= 9 and code.startswith('2')):
