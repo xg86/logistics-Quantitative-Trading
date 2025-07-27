@@ -1,0 +1,2 @@
+stock_month_return
+stock_day_return
